@@ -35,12 +35,12 @@ export class PrincipalComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const currentUser = this.authService.getCurrentUser();
+    const currentUser = this.authService.nombreUsuario;  
     if (currentUser) {
-      this.username = currentUser.username; // Asumiendo que el nombre del usuario está en la propiedad 'nombre'
+      this.username = currentUser;
     }
     if (this.username) {
-      this.reservaService.setUserData({ username: this.username });
+      this.reservaService.setUserData({ nombreUsuario: this.username });
     } else {
       const userData = this.reservaService.getUserData();
       this.username = userData?.username || '';

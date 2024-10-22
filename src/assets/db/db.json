@@ -1,0 +1,302 @@
+{
+    "database": "SportMatch.db", 
+    "version": 1,
+    "encrypted": false,
+    "mode": "full",
+    "tables": [
+        {
+            "name": "usuario", 
+            "schema": [
+                {
+                    "column": "idUsuario", 
+                    "value": "INTEGER PRIMARY KEY AUTOINCREMENT"
+                },
+                {
+                    "column": "nombreUsuario", 
+                    "value": "TEXT NOT NULL"
+                },
+                {
+                    "column": "passUsuario", 
+                    "value": "TEXT NOT NULL"
+                }
+            ],
+            "values": [
+                [1,"víctor","1234"],
+                [2,"usuario1","contraseña1"]
+            ]
+        },
+        {
+            "name": "reserva", 
+            "schema": [
+                {
+                    "column": "idReserva", 
+                    "value": "INTEGER PRIMARY KEY AUTOINCREMENT"
+                },
+                {
+                    "column": "cantpers", 
+                    "value": "INTEGER NOT NULL"
+                },
+                {
+                    "column": "idUsuario", 
+                    "value": "INTEGER NOT NULL"
+                },
+                {
+                    "column": "idEncuentro", 
+                    "value": "INTEGER NOT NULL"
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "index_reserva_idUsuario",
+                    "value": "CREATE INDEX index_reserva_idUsuario ON reserva (idUsuario)"
+                },
+                {
+                    "name": "index_reserva_idEncuentro",
+                    "value": "CREATE INDEX index_reserva_idEncuentro ON reserva (idEncuentro)"
+                }
+            ]
+        },
+        {
+            "name": "encuentro", 
+            "schema": [
+                {
+                    "column": "idEncuentro", 
+                    "value": "INTEGER PRIMARY KEY AUTOINCREMENT"
+                },
+                {
+                    "column": "nombreEncuentro", 
+                    "value": "TEXT NOT NULL"
+                },
+                {
+                    "column": "fechaEncuentro", 
+                    "value": "TEXT NOT NULL"
+                },
+                {
+                    "column": "idDeporte", 
+                    "value": "INTEGER NOT NULL"
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "index_encuentro_idDeporte",
+                    "value": "CREATE INDEX index_encuentro_idDeporte ON encuentro (idDeporte)"
+                }
+            ],
+            "values": [
+                [1,"Manchester United v/s Liverpool","15-11-2024",1],
+                [2,"Barcelona v/s Real Madrid","15-11-2024",1],
+                [3,"Bayern Munich v/s Borussia Dortmund","16-11-2024",1],
+                [4,"Lakers v/s Celtics","15-11-2024",2],
+                [5,"Federer v/s Nadal","16-11-2024",3],
+                [6,"Chelsea v/s Arsenal","17-11-2024",1],
+                [7,"Warriors v/s Heat","18-11-2024",2],
+                [8,"Djokovic v/s Thiem","19-11-2024",3],
+                [9,"PSG v/s Marseille","20-11-2024",1],
+                [10,"Nets v/s Bucks","20-11-2024",2],
+                [11,"Juventus v/s Inter de Milán","15-11-2024",1],
+                [12,"Atlético de Madrid v/s Sevilla","16-11-2024",1],
+                [13,"Raptors v/s Mavericks","17-11-2024",2],
+                [14,"Bulls v/s Suns","18-11-2024",2],
+                [15,"Zverev v/s Medvedev","17-11-2024",3],
+                [16,"Tsitsipas v/s Rublev","19-11-2024",3],
+                [17,"Napoli v/s Roma","18-11-2024",1],
+                [18,"Ajax v/s Feyenoord","19-11-2024",1],
+                [19,"76ers v/s Clippers","20-11-2024",2],
+                [20,"Alcaraz v/s Sinner","20-11-2024",3],
+                [21,"Colo Colo v/s Universidad de Chile","15-11-2024",1],
+                [22,"Universidad Católica v/s Unión Española","16-11-2024",1],
+                [23,"O'Higgins v/s Palestino","17-11-2024",1],
+                [24,"Huachipato v/s Cobresal","18-11-2024",1],
+                [25,"Everton v/s Audax Italiano","19-11-2024",1],
+                [26,"Jarry v/s Schwartzman","16-11-2024",3],
+                [27,"Garin v/s Del Potro","18-11-2024",3],
+                [28,"Celtics v/s Heat","19-11-2024",2],
+                [29,"Curicó Unido v/s Coquimbo Unido","20-11-2024",1],
+                [30,"Tabilo v/s Bautista Agut","20-11-2024",3],
+                [31,"Everton v/s West Ham","15-11-2024",1],
+                [32,"Real Betis v/s Valencia","15-11-2024",1],
+                [33,"Knicks v/s Raptors","15-11-2024",2],
+                [34,"Murray v/s Nishikori","16-11-2024",3],
+                [35,"Tottenham v/s Leicester City","16-11-2024",1],
+                [36,"Spurs v/s Pelicans","16-11-2024",2],
+                [37,"Crystal Palace v/s Southampton","17-11-2024",1],
+                [38,"Jazz v/s Nuggets","17-11-2024",2],
+                [39,"Raonic v/s Monfils","17-11-2024",3],
+                [40,"Brighton v/s Aston Villa","18-11-2024",1],
+                [41,"Alavés v/s Osasuna","18-11-2024",1],
+                [42,"Pacers v/s Grizzlies","18-11-2024",2],
+                [43,"Shapovalov v/s Hurkacz","18-11-2024",3],
+                [44,"Lazio v/s Fiorentina","19-11-2024",1],
+                [45,"Kings v/s Pistons","19-11-2024",2],
+                [46,"Kyrgios v/s Wawrinka","19-11-2024",3],
+                [47,"Liverpool v/s Everton","20-11-2024",1],
+                [48,"Warriors v/s Suns","20-11-2024",2],
+                [49,"Cilic v/s Zverev","20-11-2024",3],
+                [50,"Manchester City v/s Tottenham","20-11-2024",1],
+                [51,"Swansea City v/s Cardiff City","20-11-2024",1],
+                [52,"Cavs v/s Hawks","20-11-2024",2],
+                [53,"Cilic v/s Goffin","20-11-2024",3],
+                [54,"Norwich City v/s Brentford","20-11-2024",1],
+                [55,"Bournemouth v/s Nottingham Forest","20-11-2024",1],
+                [56,"Bulls v/s Mavericks","20-11-2024",2],
+                [57,"Anderson v/s Verdasco","20-11-2024",3],
+                [58,"Celta de Vigo v/s Getafe","20-11-2024",1],
+                [59,"Betis v/s Alavés","20-11-2024",1],
+                [60,"Real Sociedad v/s Athletic Club","15-11-2024",1],
+                [61,"Atalanta v/s Torino","15-11-2024",1]                  
+            ]
+        },
+        {
+            "name": "deporte", 
+            "schema": [
+                {
+                    "column": "idDeporte", 
+                    "value": "INTEGER PRIMARY KEY AUTOINCREMENT"
+                },
+                {
+                    "column": "nombreDeporte", 
+                    "value": "TEXT NOT NULL"
+                },
+                {
+                    "column": "descripcionDeporte", 
+                    "value": "TEXT"
+                }
+            ],
+            "values": [
+                [1,"Fútbol","Champions League, Libertadores, Campeonato nacional y todo el fútbol que buscas en compañía de nuevos amigos."],
+                [2,"Baloncesto","NBA, Euroliga, LBN Chile y toda la emoción del baloncesto que buscas en compañía de nuevos nuevos amigos."],
+                [3,"Tenis","Wimbledon, Roland Garros, US Open, Australian Open y todos los torneos de tenis que te apasionan en compañía de nuevos amigos."]
+            ]
+        },
+        {
+            "name": "encuentro_bar", 
+            "schema": [
+                {
+                    "column": "idEncuentro_Bar", 
+                    "value": "INTEGER PRIMARY KEY AUTOINCREMENT"
+                },
+                {
+                    "column": "idEncuentro", 
+                    "value": "INTEGER NOT NULL"
+                },
+                {
+                    "column": "idBar", 
+                    "value": "INTEGER NOT NULL"
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "index_encuentro_bar_idEncuentro",
+                    "value": "CREATE INDEX index_encuentro_bar_idEncuentro ON encuentro_bar (idEncuentro)"
+                },
+                {
+                    "name": "index_encuentro_bar_idBar",
+                    "value": "CREATE INDEX index_encuentro_bar_idBar ON encuentro_bar (idBar)"
+                }
+            ],
+            "values": [
+                [1,1,1],
+                [2,1,2],
+                [3,1,3],
+                [4,2,2],
+                [5,2,4],
+                [6,3,1],
+                [7,3,3],
+                [8,3,5],
+                [9,4,6],
+                [10,4,1],
+                [11,5,8],
+                [12,6,9],
+                [13,7,7],
+                [14,8,8],
+                [15,9,5],
+                [16,10,7],
+                [17,11,9],
+                [18,12,6],
+                [19,13,3],
+                [20,14,10],
+                [21,15,8],
+                [22,16,10],
+                [23,17,9],
+                [24,18,6],
+                [25,19,5],
+                [26,20,8],
+                [27,21,10],
+                [28,22,7],
+                [29,23,6],
+                [30,24,9],
+                [31,25,4],
+                [32,26,8],
+                [33,27,6],
+                [34,28,7],
+                [35,29,9],
+                [36,30,10],
+                [37,1,4],
+                [38,2,3],
+                [39,3,8],
+                [40,4,2],
+                [41,5,6],
+                [42,6,1],
+                [43,7,5],
+                [44,8,9],
+                [45,9,3],
+                [46,10,4],
+                [47,11,2],
+                [48,12,10],
+                [49,13,7],
+                [50,14,1],
+                [51,15,9],
+                [52,16,3],
+                [53,17,8],
+                [54,18,2],
+                [55,19,1],
+                [56,20,5],
+                [57,21,4],
+                [58,22,10],
+                [59,23,2],
+                [60,24,7],
+                [61,25,3],
+                [62,26,9],
+                [63,27,1],
+                [64,28,6],
+                [65,29,8],
+                [66,30,4],
+                [67,1,7],
+                [68,2,9],
+                [69,3,10],
+                [70,4,5],
+                [71,5,1],
+                [72,6,2]
+              ]              
+        },
+        {
+            "name": "bar", 
+            "schema": [
+                {
+                    "column": "idBar", 
+                    "value": "INTEGER PRIMARY KEY AUTOINCREMENT"
+                },
+                {
+                    "column": "nombreBar", 
+                    "value": "TEXT NOT NULL"
+                },
+                {
+                    "column": "direccionBar", 
+                    "value": "TEXT"
+                }
+            ],
+            "values": [
+                [1,"El Rincón Futbolero","Av. Las Condes 1020, Las Condes"],
+                [2,"Sports Bar","Calle Principal 123, Ñuñoa"],
+                [3,"Golazo Bar","Av. Vitacura 777, Vitacura"],
+                [4,"Champions","Paseo de la Victoria 654, Santiago"],
+                [5,"The Dugout","Avenida Central 456, Santiago"],
+                [6,"Básquet Lounge","Av. Providencia 333, Providencia"],
+                [7,"La Pelota Loca","Av. La Florida 902, La Florida"],
+                [8,"MatchPoint","La Concepción 451, Providencia"],
+                [9,"The Sideline","Calle del Estadio 321, Santiago"],
+                [10,"Overtime","Plaza Mayor 789, Santiago"]
+            ]            
+        }
+    ]
+}

@@ -1,80 +1,38 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { delay, tap } from 'rxjs/operators';
-
-interface User {
-  username: string;
-  password: string;
-}
+import { SqliteService } from '../sqliteService/sqlite.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private isLoggedInSubject = new BehaviorSubject<boolean>(false);
-  isLoggedIn$ = this.isLoggedInSubject.asObservable();
+  nombreUsuario: string | null = null;
 
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
-  currentUser$ = this.currentUserSubject.asObservable();
+  constructor(private sqliteService: SqliteService) {}
 
-  // Usuarios en duro para simular la autenticación
-  private users = [
-    { username: 'usuario1', password: 'contraseña1' },
-    { username: 'víctor', password: '1234' }
-  ];
-
-  constructor() {
-    this.checkInitialAuthStatus();
-  }
-
-  private checkInitialAuthStatus() {
-    const token = localStorage.getItem('authToken');
-    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    if (token && user) {
-      this.isLoggedInSubject.next(true);
-      this.currentUserSubject.next(user);
-    }
-  }
-
-  login(credentials: { username: string, password: string }): Observable<any> {
-    return of(this.checkCredentials(credentials)).pipe(
-      tap(response => {
-        if (response.success) {
-          localStorage.setItem('authToken', response.token);
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
-          this.isLoggedInSubject.next(true);
-          this.currentUserSubject.next(response.user);
-        }
-      })
-    );
-  }
-
-  private checkCredentials(credentials: { username: string, password: string }): any {
-    const user = this.users.find(u => u.username === credentials.username && u.password === credentials.password);
-    if (user) {
-      const { password, ...userWithoutPassword } = user;
-      return { 
-        success: true, 
-        token: 'fake-jwt-token',
-        user: userWithoutPassword
-      };
-    } else {
-      return { success: false, message: 'Credenciales inválidas' };
+  async login(username: string, password: string): Promise<boolean> {
+    console.log('AuthService: Iniciando login para', username);
+    try {
+      const isAuthenticated = await this.sqliteService.authenticateUser(username, password);
+      console.log('AuthService: Resultado de autenticación:', isAuthenticated);
+      if (isAuthenticated) {
+        this.nombreUsuario = username;
+        console.log('AuthService: Login exitoso para', username);
+        return true;
+      } else {
+        console.log('AuthService: Login fallido para', username);
+        return false;
+      }
+    } catch (error) {
+      console.error('AuthService: Error durante el login:', error);
+      return false;
     }
   }
 
   logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
-    this.isLoggedInSubject.next(false);
-    this.currentUserSubject.next(null);
+    this.nombreUsuario = null;
   }
 
-  isAuthenticated(): boolean {
-    return this.isLoggedInSubject.value;
-  }
-
-  getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
+  isLoggedIn(): boolean {
+    return this.nombreUsuario !== null;
   }
 }

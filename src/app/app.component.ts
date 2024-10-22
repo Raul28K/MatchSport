@@ -1,8 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { MenuController } from '@ionic/angular';
+import { MenuController, Platform } from '@ionic/angular';
 import { ReservaService } from './services/reservaService/reserva.service';
 import { filter } from 'rxjs/operators';
+import { Device } from '@capacitor/device';
+import { SqliteService } from './services/sqliteService/sqlite.service';
+import { Capacitor } from '@capacitor/core';
+import { AuthService } from './services/authService/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -18,23 +22,48 @@ export class AppComponent implements OnInit {
   encuentroNombre: string = '';
   cantidadPersonas: number = 0;
   barDireccion: string = '';
+  public isWeb: boolean = Capacitor.getPlatform() === 'web';
+  public load: boolean;
+
 
   constructor(
     private router: Router,
     private menuCtrl: MenuController,
     private route: ActivatedRoute,
-    private reservaService: ReservaService
-  ) {}
+    private reservaService: ReservaService,
+    private platform: Platform,
+    private sqliteService: SqliteService,
+    private authService: AuthService
+  ) {
+    this.load = false;
+    this.initApp();
+  }
 
-  ngOnInit() {
-    // Suscribirse a los eventos de navegación
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      this.updateUsernameFromRoute();
-    });
+  async ngOnInit() {
+    try {
+      if (this.sqliteService.isWeb) {
+        await customElements.whenDefined('jeep-sqlite');
+        const jeepSqlite = document.querySelector('jeep-sqlite') as JeepSQLiteElement;
+        if (jeepSqlite) {
+          await jeepSqlite.initWebStore();
+        }
+      }
+      await this.sqliteService.init();
+      console.log('AppComponent: Base de datos inicializada correctamente');
+      await this.sqliteService.checkUsers();
+    } catch (error) {
+      console.error('AppComponent: Error al inicializar la base de datos:', error);
+    }
+  }
 
-    this.updateUsernameFromRoute();
+  async initApp() {
+    await this.platform.ready();
+    try {
+      await this.sqliteService.init();
+      console.log('Base de datos inicializada correctamente');
+    } catch (error) {
+      console.error('Error al inicializar la base de datos:', error);
+    }
   }
 
   updateUsernameFromRoute() {
@@ -49,6 +78,22 @@ export class AppComponent implements OnInit {
     }
   }
 
+  async checkDatabaseReady(): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (this.load) {
+        resolve(true);
+      } else {
+        const subscription = this.sqliteService.dbReady.subscribe((ready) => {
+          if (ready) {
+            subscription.unsubscribe();
+            resolve(true);
+          }
+        });
+      }
+    });
+  }
+
+  /*Funciones del menu*/
   navigateTo(page: string) {
     this.router.navigate(['/loading']);
     setTimeout(() => {
@@ -74,18 +119,12 @@ export class AppComponent implements OnInit {
 
   logout() {
     this.username = '';
-    this.reservaService.clearAllData(); // Asegúrate de que este método exista en ReservaService
+    this.authService.logout();
     this.router.navigate(['/login']);
     this.menuCtrl.close();
   }
 
-  setUsername(username: string) {
-    this.username = username;
-    this.reservaService.setUserData({ username: username });
-  }
 
-  clearFields() {
-    this.username = '';
-    this.password = '';
-  }
+
+
 }
