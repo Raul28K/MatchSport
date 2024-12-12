@@ -14,6 +14,7 @@ export class SqliteService {
   public isWeb: boolean;
   public isIOS: boolean;
   public dbName: string;
+  private hasConnection = false;
 
 
 
@@ -26,60 +27,87 @@ export class SqliteService {
 
 
    async init() {
+    try {
+      const info = await Device.getInfo();
+      const sqlite = CapacitorSQLite as any;
 
-    const info = await Device.getInfo();
-    // CapacitorSQLite no tiene disponible el metodo requestPermissions pero si existe y es llamable
-    const sqlite = CapacitorSQLite as any;
-
-    // Si estamos en android, pedimos permiso
-    if (info.platform == 'android') {
-      try {
-        await sqlite.requestPermissions();
-      } catch (error) {
-        console.error("Esta app necesita permisos para funcionar")
+      if (info.platform == 'android') {
+        try {
+          await sqlite.requestPermissions();
+        } catch (error) {
+          console.error("Esta app necesita permisos para funcionar");
+        }
+      } else if (info.platform == 'web') {
+        this.isWeb = true;
+        await sqlite.initWebStore();
+      } else if (info.platform == 'ios') {
+        this.isIOS = true;
       }
-      // Si estamos en web, iniciamos la web store
-    } else if (info.platform == 'web') {
-      this.isWeb = true;
-      await sqlite.initWebStore();
-    } else if (info.platform == 'ios') {
-      this.isIOS = true;
+
+      await this.setupDatabase();
+    } catch (error) {
+      console.error('Error en init:', error);
     }
-
-    // Arrancamos la base de datos
-    this.setupDatabase();
-
   }
 
   async setupDatabase() {
     try {
+      await this.closeConnection();
+      
       const dbSetup = await Preferences.get({ key: 'first_setup_key' });
 
-      // Sino la hemos creado, descargamos y creamos la base de datos
       if (!dbSetup.value) {
         await this.downloadDatabase();
       } else {
-        // Nos volvemos a conectar
         this.dbName = await this.getDbName();
-        await CapacitorSQLite.createConnection({ database: this.dbName });
-        await CapacitorSQLite.open({ database: this.dbName });
         
-        // Verificamos que la tabla usuarios existe
         try {
-          await CapacitorSQLite.query({
-            database: this.dbName,
-            statement: 'SELECT * FROM usuarios LIMIT 1'
+          await CapacitorSQLite.checkConnectionsConsistency({
+            dbNames: [this.dbName],
+            openModes: ['RW']
           });
-          this.dbReady.next(true);
+
+          try {
+            await CapacitorSQLite.closeConnection({ database: this.dbName });
+          } catch (e) {
+          }
+
+          await CapacitorSQLite.createConnection({ database: this.dbName });
+          
+          await CapacitorSQLite.open({ database: this.dbName });
+          
+          const queryResult = await CapacitorSQLite.query({
+            database: this.dbName,
+            statement: 'SELECT * FROM usuarios LIMIT 1',
+            values: []
+          });
+
+          if (queryResult && queryResult.values && queryResult.values.length >= 0) {
+            this.hasConnection = true;
+            this.dbReady.next(true);
+          } else {
+            throw new Error('No se pudo verificar la tabla usuarios');
+          }
+
         } catch (error) {
           console.error('Error verificando tabla usuarios:', error);
-          // Si la tabla no existe, reseteamos la base de datos
           await this.resetDatabase();
         }
       }
     } catch (error) {
       console.error('Error en setupDatabase:', error);
       await this.resetDatabase();
+    }
+  }
+
+  async closeConnection() {
+    try {
+      if (this.dbName && this.hasConnection) {
+        await CapacitorSQLite.closeConnection({ database: this.dbName });
+        this.hasConnection = false;
+      }
+    } catch (error) {
+      console.error('Error cerrando conexión:', error);
     }
   }
 
@@ -96,29 +124,25 @@ export class SqliteService {
 
         this.dbName = jsonExport.database;
         
-        // Importamos la base de datos con los datos iniciales
-        const importResult = await CapacitorSQLite.importFromJson({ jsonstring });
+        await CapacitorSQLite.importFromJson({ jsonstring });
                 
-        // Creamos y abrimos la conexión
         await CapacitorSQLite.createConnection({ database: this.dbName });
         await CapacitorSQLite.open({ database: this.dbName });
 
-        // Si estamos en web, guardamos explícitamente en el store
         if (this.isWeb) {
             await CapacitorSQLite.saveToStore({ database: this.dbName });
         }
 
-        // Guardamos las preferencias
         await Preferences.set({ key: 'first_setup_key', value: '1' });
         await Preferences.set({ key: 'dbname', value: this.dbName });
 
+        this.hasConnection = true;
         this.dbReady.next(true);
     } catch (error) {
         console.error('Error al inicializar la base de datos:', error);
         throw error;
     }
   }
-
 
   async getDbName() {
 
@@ -131,21 +155,38 @@ export class SqliteService {
     return this.dbName;
   }
 
+  async ensureConnection() {
+    if (!this.hasConnection && this.dbName) {
+      try {
+        await CapacitorSQLite.createConnection({ database: this.dbName });
+        await CapacitorSQLite.open({ database: this.dbName });
+        this.hasConnection = true;
+      } catch (error) {
+        console.error('Error al reconectar:', error);
+        throw error;
+      }
+    }
+  }
 
   async readDeporte(deporteId: number) {
-    let sql = 'SELECT * FROM deportes WHERE deporte_id = ?';
-    const dbName = await this.getDbName();
+    await this.ensureConnection();
+    const sql = 'SELECT * FROM deportes WHERE deporte_id = ?';
+    
+    try {
+      const result = await CapacitorSQLite.query({
+        database: this.dbName,
+        statement: sql,
+        values: [deporteId.toString()]
+      });
 
-    return CapacitorSQLite.query({
-      database: dbName,
-      statement: sql,
-      values: [deporteId]
-    }).then((response: capSQLiteValues) => {
-      if (this.isIOS && response.values.length > 0) {
-        response.values.shift();
+      if (this.isIOS && result.values.length > 0) {
+        result.values.shift();
       }
-      return response.values.length > 0 ? response.values[0] : null;
-    }).catch(err => Promise.reject(err));
+      return result.values.length > 0 ? result.values[0] : null;
+    } catch (error) {
+      console.error('Error en readDeporte:', error);
+      throw error;
+    }
   }
 
   async readEncuentros(deporteId: number, fecha: string) {
@@ -249,7 +290,6 @@ export class SqliteService {
         }]
       });
 
-      // Si estamos en web, guardamos en el store
       if (this.isWeb) {
         await CapacitorSQLite.saveToStore({ database: dbName });
       }
@@ -297,7 +337,6 @@ export class SqliteService {
     }
   }
 
-  // Método para limpiar todas las reservas (útil para testing)
   async clearReservas() {
     localStorage.removeItem('reservas');
     return { success: true };
@@ -324,16 +363,18 @@ export class SqliteService {
 
   async resetDatabase() {
     try {
-      // Eliminar las preferencias
+      await this.closeConnection();
       await Preferences.remove({ key: 'first_setup_key' });
       await Preferences.remove({ key: 'dbname' });
 
-      // Si estamos en web, eliminar la base de datos del store
       if (this.isWeb) {
         await CapacitorSQLite.deleteDatabase({ database: this.dbName });
       }
 
-      // Reiniciar la aplicación
+      this.dbName = '';
+      this.hasConnection = false;
+      this.dbReady.next(false);
+      
       window.location.reload();
     } catch (error) {
       console.error('Error reseteando la base de datos:', error);

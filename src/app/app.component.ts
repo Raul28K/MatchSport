@@ -6,6 +6,7 @@ import { Device } from '@capacitor/device';
 import { SqliteService } from './services/sqliteService/sqlite.service';
 import { AuthService } from './services/authService/auth.service';
 import { AvatarService } from './services/apiService/api.service';
+import { App } from '@capacitor/app';
 
 
 @Component({
@@ -40,16 +41,20 @@ export class AppComponent implements AfterViewInit  {
     this.initApp();
   }
 
-  initApp(){
-
-    this.platform.ready().then( async () => {
+  async initApp() {
+    try {
+      await this.platform.ready();
       const info = await Device.getInfo();
       this.isWeb = info.platform == 'web';
 
-      this.sqlite.init();
+      await this.sqlite.init();
+      
       this.sqlite.dbReady.subscribe(load => {
         this.load = load;
-      })
+        if (!load) {
+          this.sqlite.init();
+        }
+      });
 
       this.authService.isLoggedIn$.subscribe(isLoggedIn => {
         if (isLoggedIn) {
@@ -60,8 +65,19 @@ export class AppComponent implements AfterViewInit  {
           }
         }
       });
-    })
 
+      App.addListener('appStateChange', ({ isActive }) => {
+        if (!isActive) {
+          this.sqlite.closeConnection();
+        } else {
+          this.sqlite.setupDatabase();
+        }
+      });
+
+    } catch (error) {
+      console.error('Error en initApp:', error);
+      this.sqlite.resetDatabase();
+    }
   }
 
   ngAfterViewInit() {

@@ -9,6 +9,11 @@ const config: CapacitorConfig = {
       enableDebug: false,
       androidIsEncryption: false,
       iosIsEncryption: false
+    },
+    Keyboard: {
+      resize: true,
+      style: 'DARK',
+      resizeOnFullScreen: true
     }
   }
 };
