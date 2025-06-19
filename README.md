@@ -3,7 +3,7 @@
 Solución móvil de <strong>inspiración propia</strong> que tiene por objetivo acercar los eventos deportivos a la comunidad a través de una plataforma que permite reservar un espacio en un local para
 poder ir a ver tu encuentro deportivo favorito! 
 <br>
-Para iniciar el proyecto es necesario tener instalado node y en powershell como admin ingresar:
+Para iniciar el proyecto es necesario tener instalado node y en powershell con persmisos de admin navegar al directorio raiz del proyecto e ingresar:
 <br>
 -> npm install -g @ionic/cli
 <br>
